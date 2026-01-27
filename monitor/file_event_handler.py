@@ -9,6 +9,7 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
     """Classe que defineix què fer quan hi ha canvis."""
 
     def __init__(self):
+        self.endpoint = "localhost"
         self.client = None
         self.path_to_observe = None
         self.observer = None
@@ -21,11 +22,15 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         self.path_to_observe = path_to_observe
         return self
 
+    def set_end_point(self, endpoint):
+        self.endpoint = endpoint
+        return self
+
     def start(self):
         self.observer = Observer()
         self.observer.schedule(self, self.path_to_observe, recursive=True)
         self.observer.start()
-        self.client = DagsterGraphQLClient(hostname="localhost", port_number=3000)
+        self.client = DagsterGraphQLClient(hostname=self.endpoint, port_number=3000)
         print(f"Monitor iniciat a: {self.path_to_observe}")
 
 
