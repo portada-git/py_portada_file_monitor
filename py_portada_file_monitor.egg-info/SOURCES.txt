@@ -1,0 +1,10 @@
+pyproject.toml
+setup.py
+monitor/__init__.py
+monitor/file_event_handler.py
+py_portada_file_monitor.egg-info/PKG-INFO
+py_portada_file_monitor.egg-info/SOURCES.txt
+py_portada_file_monitor.egg-info/dependency_links.txt
+py_portada_file_monitor.egg-info/not-zip-safe
+py_portada_file_monitor.egg-info/requires.txt
+py_portada_file_monitor.egg-info/top_level.txt

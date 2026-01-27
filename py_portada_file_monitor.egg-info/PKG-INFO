@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: py_portada_file_monitor
+Version: 0.0.1
+Summary: ....... for PortADa project
+Home-page: https://github.com/portada-git/py_portada_file_monitor.git
+Author: PortADa team
+Author-email: jcbportada@gmail.com
+License: MIT
+Requires-Python: >=3.12
+Requires-Dist: watchdog
+Requires-Dist: dagster_graphql
+Dynamic: author
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: license
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

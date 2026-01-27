@@ -6,9 +6,12 @@ setup(name='py_portada_file_monitor',
     author='PortADa team',
     author_email='jcbportada@gmail.com',
     license='MIT',
-    url="https://github.com/portada-git/py_extractor_calculators",
-    packages=['py_extractor_calculators.sm'],
-    py_modules=['sm_calculators'],
-    install_requires=[],
-    python_requires='>=3.9',
+    url="https://github.com/portada-git/py_portada_file_monitor.git",
+    packages=['monitor'],
+    py_modules=['file_event_handler'],
+    install_requires=[
+        "watchdog",
+        "dagster_graphql"
+    ],
+    python_requires='>=3.12',
     zip_safe=False)
