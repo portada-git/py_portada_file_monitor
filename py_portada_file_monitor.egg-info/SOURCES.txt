@@ -1,7 +1,7 @@
 pyproject.toml
 setup.py
-monitor/__init__.py
-monitor/file_event_handler.py
+portada_file_monitor/__init__.py
+portada_file_monitor/file_event_handler.py
 py_portada_file_monitor.egg-info/PKG-INFO
 py_portada_file_monitor.egg-info/SOURCES.txt
 py_portada_file_monitor.egg-info/dependency_links.txt
