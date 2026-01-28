@@ -13,6 +13,7 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         self.client = None
         self.path_to_observe = None
         self.observer = None
+        self.data_layer_config_path = None
 
     def set_observer(self, observer):
         self.observer = observer
@@ -20,6 +21,10 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
 
     def set_path_to_observe(self, path_to_observe):
         self.path_to_observe = path_to_observe
+        return self
+
+    def set_data_layer_config_path(self, data_layer_config_path):
+        self.data_layer_config_path = data_layer_config_path
         return self
 
     def set_end_point(self, endpoint):
@@ -58,7 +63,7 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
                 "resources": {
                     "datalayer": {
                         "config": {
-                            "config_path": ruta_fitxer,
+                            "config_path": self.data_layer_config_path,
                         }
                     }
                 }
