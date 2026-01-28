@@ -47,7 +47,7 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
 
     def on_created(self, event):
         # Ignorem si és un directori
-        if not event.is_directory:
+        if not (event.is_directory or os.path.isdir(event.src_path)):
             print(f"Nou fitxer detectat: {event.src_path}")
             self.process_file(event.src_path)
 
