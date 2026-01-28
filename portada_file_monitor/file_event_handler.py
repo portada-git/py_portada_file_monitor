@@ -1,6 +1,6 @@
 import time
 import os
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver as Observer
 from watchdog.events import FileSystemEventHandler
 from dagster_graphql import DagsterGraphQLClient
 
@@ -44,12 +44,13 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         self.observer.join()
         print("Monitor aturat correctament.")
 
-
     def on_created(self, event):
-        # Ignorem si és un directori
-        if not (event.is_directory or os.path.isdir(event.src_path)):
-            print(f"Nou fitxer detectat: {event.src_path}")
-            self.process_file(event.src_path)
+        print(f"DEBUG: Esdeveniment rebut: {event.src_path} - IsDir: {event.is_directory}")
+        if event.is_directory or os.path.isdir(event.src_path):
+            print(f"DEBUG: Ignorat perquè és un directori: {event.src_path}")
+            return
+        print(f"Nou fitxer detectat: {event.src_path}")
+        self.process_file(event.src_path)
 
     def process_file(self, ruta_fitxer):
         parent = os.path.dirname(ruta_fitxer)
