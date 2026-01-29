@@ -80,7 +80,7 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
                 "user":user
             }
 
-            response = requests.post(url, params=params)
+            response = requests.post(url, json=params)
             print(response.json())
 
     # @staticmethod
