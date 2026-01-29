@@ -1,5 +1,7 @@
 import time
 import os
+
+import requests
 from watchdog.observers.polling import PollingObserver as Observer
 from watchdog.events import FileSystemEventHandler
 from dagster_graphql import DagsterGraphQLClient
@@ -9,12 +11,13 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
     """Classe que defineix què fer quan hi ha canvis."""
 
     def __init__(self):
-        self.entry_process_function = self.dagster_process_entry
-        self.endpoint = "localhost"
-        self.client = None
+        # self.entry_process_function = self.dagster_process_entry
+        self.host = "localhost"
+        # self.client = None
         self.path_to_observe = None
         self.observer = None
-        self.data_layer_config_path = None
+        # self.data_layer_config_path = None
+        self.port = 5555
 
     def set_observer(self, observer):
         self.observer = observer
@@ -24,23 +27,28 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         self.path_to_observe = path_to_observe
         return self
 
-    def set_data_layer_config_path(self, data_layer_config_path):
-        self.data_layer_config_path = data_layer_config_path
+    # def set_data_layer_config_path(self, data_layer_config_path):
+    #     self.data_layer_config_path = data_layer_config_path
+    #     return self
+
+    def set_host(self, host):
+        self.host = host
         return self
 
-    def set_end_point(self, endpoint):
-        self.endpoint = endpoint
+
+    def set_port(self, port):
+        self.port = port
         return self
 
-    def set_entry_file_process(self, process_function):
-        self.entry_process_function = process_function
-        return self
+    # def set_entry_file_process(self, process_function):
+    #     self.entry_process_function = process_function
+    #     return self
 
     def start(self):
         self.observer = Observer()
         self.observer.schedule(self, self.path_to_observe, recursive=True)
         self.observer.start()
-        self.client = DagsterGraphQLClient(hostname=self.endpoint, port_number=3000)
+        # self.client = DagsterGraphQLClient(hostname=self.host, port_number=3000)
         print(f"Monitor iniciat a: {self.path_to_observe}")
 
 
@@ -58,41 +66,38 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         self.process_file(event.src_path)
 
     def process_file(self, ruta_fitxer):
-        parent = os.path.dirname(ruta_fitxer)
-        user = os.path.relpath(parent, self.path_to_observe)
+        parent_t = os.path.dirname(ruta_fitxer)
+        parent_u = os.path.dirname(parent_t)
+        f_type = os.path.relpath(parent_t, self.path_to_observe)
+        user = os.path.relpath(parent_u, parent_t)
+        if not f_type:
+            f_type = "entry"
         if not user:
             user = "UNKNOWN_USER"
-        self.entry_process_function(self, ruta_fitxer, user)
-
-    @staticmethod
-    def dagster_process_entry(self, ruta_fitxer, user):
-        self.client.submit_job_execution(
-            job_name="ingestion",
-            run_config={
-                "ops": {"ingested_entry_file": {"config": {"local_path": ruta_fitxer, "user": user}}},
-                "resources": {
-                    "datalayer": {
-                        "config": {
-                            "config_path": self.data_layer_config_path,
-                        }
-                    }
-                }
+        if f_type.lower() == "entity":
+            url = f"http://{self.host}:{self.port}/entity/ingestion"
+            params = {
+                "file_path": ruta_fitxer,
+                "user":user
             }
-        )
 
+            response = requests.post(url, params=params)
+            print(response.json())
 
-if __name__ == "__main__":
-    PATH_A_VIGILAR = "./la_teva_carpeta"  # Canvia-ho pel teu directori
+    # @staticmethod
+    # def dagster_process_entry(self, ruta_fitxer, user):
+    #     self.client.submit_job_execution(
+    #         job_name="ingestion",
+    #         run_config={
+    #             "ops": {"ingested_entry_file": {"config": {"local_path": ruta_fitxer, "user": user}}},
+    #             "resources": {
+    #                 "datalayer": {
+    #                     "config": {
+    #                         "config_path": self.data_layer_config_path,
+    #                     }
+    #                 }
+    #             }
+    #         }
+    #     )
 
-    # Creem l'observador i el manejador
-    event_handler = PortadaIngestionEventHandler()
-    event_handler.set_path_to_observe(PATH_A_VIGILAR).set_observer(Observer()).start()
-
-    try:
-        while True:
-            # El procés principal es queda aquí esperant
-            time.sleep(1)
-    except KeyboardInterrupt:
-        event_handler.stop()
-        print("\nMonitorització aturada.")
 

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='py_portada_file_monitor',
-    version='0.0.7',
+    version='0.1.0',
     description='....... for PortADa project',
     author='PortADa team',
     author_email='jcbportada@gmail.com',
@@ -11,7 +11,6 @@ setup(name='py_portada_file_monitor',
     py_modules=['file_event_handler'],
     install_requires=[
         "watchdog",
-        "dagster_graphql",
     ],
     python_requires='>=3.12',
     zip_safe=False)
