@@ -9,6 +9,7 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
     """Classe que defineix què fer quan hi ha canvis."""
 
     def __init__(self):
+        self.entry_process_function = self.dagster_process_entry
         self.endpoint = "localhost"
         self.client = None
         self.path_to_observe = None
@@ -29,6 +30,10 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
 
     def set_end_point(self, endpoint):
         self.endpoint = endpoint
+        return self
+
+    def set_entry_file_process(self, process_function):
+        self.entry_process_function = process_function
         return self
 
     def start(self):
@@ -57,6 +62,10 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         user = os.path.relpath(parent, self.path_to_observe)
         if not user:
             user = "UNKNOWN_USER"
+        self.entry_process_function(self, ruta_fitxer, user)
+
+    @staticmethod
+    def dagster_process_entry(self, ruta_fitxer, user):
         self.client.submit_job_execution(
             job_name="ingestion",
             run_config={
