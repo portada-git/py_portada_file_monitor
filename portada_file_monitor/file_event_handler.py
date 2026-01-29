@@ -1,10 +1,9 @@
-import time
+# import time
 import os
-
 import requests
 from watchdog.observers.polling import PollingObserver as Observer
 from watchdog.events import FileSystemEventHandler
-from dagster_graphql import DagsterGraphQLClient
+# from dagster_graphql import DagsterGraphQLClient
 
 
 class PortadaIngestionEventHandler(FileSystemEventHandler):

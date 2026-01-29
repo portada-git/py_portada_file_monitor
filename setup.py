@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='py_portada_file_monitor',
-    version='0.1.0',
+    version='0.1.1',
     description='....... for PortADa project',
     author='PortADa team',
     author_email='jcbportada@gmail.com',
