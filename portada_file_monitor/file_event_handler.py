@@ -67,22 +67,22 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
     def process_file(self, ruta_fitxer):
         parents = os.path.dirname(ruta_fitxer)
         type_and_user = os.path.relpath(parents, self.path_to_observe)
-        f_type, user = type_and_user.split("/")
+        f_type, user_or_entity = type_and_user.split("/")
         if not f_type:
             f_type = "entry"
-        if not user:
-            user = "UNKNOWN_USER"
+        if not user_or_entity:
+            user_or_entity = "UNKNOWN_USER"
         if f_type.lower() == "entity":
             url = f"http://{self.host}:{self.port}/entity/ingestion"
             params = {
                 "file_path": ruta_fitxer,
-                "user":user
+                "entity":user_or_entity
             }
         else:
             url = f"http://{self.host}:{self.port}/entry/ingestion"
             params = {
                 "file_path": ruta_fitxer,
-                "user":user
+                "user":user_or_entity
             }
         print(f"DEBUG: url: {url}")
         try:
