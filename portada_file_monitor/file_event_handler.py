@@ -65,10 +65,9 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         self.process_file(event.src_path)
 
     def process_file(self, ruta_fitxer):
-        parent_t = os.path.dirname(ruta_fitxer)
-        parent_u = os.path.dirname(parent_t)
-        f_type = os.path.relpath(parent_t, self.path_to_observe)
-        user = os.path.relpath(parent_u, parent_t)
+        parents = os.path.dirname(ruta_fitxer)
+        type_and_user = os.path.relpath(parents, self.path_to_observe)
+        f_type, user = type_and_user.split("/")
         if not f_type:
             f_type = "entry"
         if not user:
@@ -79,9 +78,18 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
                 "file_path": ruta_fitxer,
                 "user":user
             }
-
+        else:
+            url = f"http://{self.host}:{self.port}/entry/ingestion"
+            params = {
+                "file_path": ruta_fitxer,
+                "user":user
+            }
+        print(f"DEBUG: url: {url}")
+        try:
             response = requests.post(url, json=params)
             print(response.json())
+        except Exception as e:
+            print(f"DEBUG: error connecting to {url}. Error message: {e}")
 
     # @staticmethod
     # def dagster_process_entry(self, ruta_fitxer, user):
