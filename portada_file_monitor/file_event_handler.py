@@ -8,7 +8,7 @@ from watchdog.events import FileSystemEventHandler
 # class BasePortadaIngestionEventHandler(FileSystemEventHandler):
 class PortadaIngestionEventHandler(FileSystemEventHandler):
     def __init__(self):
-        self.file_process_function = self.__process_entry
+        self.file_process_function = None
         self.path_to_observe = None
         self.observer = None
 
