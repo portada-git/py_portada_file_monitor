@@ -1,11 +1,11 @@
+import json
 import os
-# import requests
+
+import redis
 from watchdog.observers.polling import PollingObserver as Observer
 from watchdog.events import FileSystemEventHandler
-# from dagster_graphql import DagsterGraphQLClient
 
 
-# class BasePortadaIngestionEventHandler(FileSystemEventHandler):
 class PortadaIngestionEventHandler(FileSystemEventHandler):
     def __init__(self):
         self.file_process_function = None
@@ -28,7 +28,6 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
         self.observer = Observer()
         self.observer.schedule(self, self.path_to_observe, recursive=True)
         self.observer.start()
-        # self.client = DagsterGraphQLClient(hostname=self.host, port_number=3000)
         print(f"Monitor iniciat a: {self.path_to_observe}")
 
     def stop(self):
@@ -55,97 +54,38 @@ class PortadaIngestionEventHandler(FileSystemEventHandler):
             user_or_entity = "UNKNOWN_USER"
         return f_type, user_or_entity
 
-# class PortadaIngestionEventHandlerFromPapi(BasePortadaIngestionEventHandler):
-#     """Classe que defineix què fer quan hi ha canvis."""
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.host = "localhost"
-#         self.port = 5555
-#
-#     def set_host(self, host):
-#         self.host = host
-#         return self
-#
-#     def set_port(self, port):
-#         self.port = port
-#         return self
-#
-#     def process_file(self, path_file, file_type=None, user_or_entity=None):
-#         if file_type.lower() == "entity":
-#             url = f"http://{self.host}:{self.port}/entity/ingestion"
-#             params = {
-#                 "file_path": path_file,
-#                 "entity": user_or_entity
-#             }
-#         else:
-#             url = f"http://{self.host}:{self.port}/entry/ingestion"
-#             params = {
-#                 "file_path": path_file,
-#                 "user": user_or_entity
-#             }
-#         print(f"DEBUG: url: {url}")
-#         try:
-#             response = requests.post(url, json=params)
-#             print(response.json())
-#         except Exception as e:
-#             print(f"DEBUG: error connecting to {url}. Error message: {e}")
-#
-#
-# class PortadaIngestionEventHandler(FileSystemEventHandler):
-#     """Classe que defineix què fer quan hi ha canvis."""
-#
-#     def __init__(self):
-#         super().__init__()
-#         self.host = "localhost"
-#         # self.client = None
-#         # self.data_layer_config_path = None
-#         self.port = 5555
-#
-#     # def set_data_layer_config_path(self, data_layer_config_path):
-#     #     self.data_layer_config_path = data_layer_config_path
-#     #     return self
-#
-#     def set_host(self, host):
-#         self.host = host
-#         return self
-#
-#     def set_port(self, port):
-#         self.port = port
-#         return self
-#
-#     def process_file(self, path_file, file_type=None, user_or_entity=None):
-#         if file_type.lower() == "entity":
-#             url = f"http://{self.host}:{self.port}/entity/ingestion"
-#             params = {
-#                 "file_path": path_file,
-#                 "entity": user_or_entity
-#             }
-#         else:
-#             url = f"http://{self.host}:{self.port}/entry/ingestion"
-#             params = {
-#                 "file_path": path_file,
-#                 "user": user_or_entity
-#             }
-#         print(f"DEBUG: url: {url}")
-#         try:
-#             response = requests.post(url, json=params)
-#             print(response.json())
-#         except Exception as e:
-#             print(f"DEBUG: error connecting to {url}. Error message: {e}")
-#
-#     # @staticmethod
-#     # def dagster_process_entry(self, ruta_fitxer, user):
-#     #     self.client.submit_job_execution(
-#     #         job_name="ingestion",
-#     #         run_config={
-#     #             "ops": {"ingested_entry_file": {"config": {"local_path": ruta_fitxer, "user": user}}},
-#     #             "resources": {
-#     #                 "datalayer": {
-#     #                     "config": {
-#     #                         "config_path": self.data_layer_config_path,
-#     #                     }
-#     #                 }
-#     #             }
-#     #         }
-#     #     )
+
+class QueuedPortadaIngestionEventHandler(PortadaIngestionEventHandler):
+    def __init__(self, host, port, db=2):
+        self.redis_queue = r = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+        self.queue_name="ingestion_queue"
+        self.can_process = True
+        self.file_process_function = self.handler_file_process_function
+        self.__file_process_function = None
+
+    def set_file_process_function(self, process_function):
+        self.__file_process_function = process_function
+        return self
+
+    def try_to_process_file(self):
+        # 1. Mirem si el sistema està lliure
+        if self.can_process:
+            p = self.redis_queue.lpop(self.queue_name)
+
+            if p:
+                pdict = json.loads(p)
+                self.can_process = False
+                self.__file_process_function(pdict["path"], pdict["file_type"], pdict["user_or_entity"])
+            else:
+                print(" [Info] Cua buida, sistema lliure.")
+
+    def handler_file_process_function(self, path, file_type, user_or_entity):
+        queue_entry = json.dumps({"path": path, "file_type": file_type, "user_or_entity": user_or_entity})
+        self.redis_queue.rpush(self.queue_name, queue_entry)
+        self.try_to_process_file()
+
+    def on_deleted(self, event):
+        # L'esdeveniment clau: EL SENYAL DE "LLIURE"
+        print(f" [-] File processed and removed: {event.src_path}")
+        self.can_process = True
+        self.try_to_process_file()
