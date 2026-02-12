@@ -1,6 +1,5 @@
 import json
 import os
-
 import redis
 from watchdog.observers.polling import PollingObserver as Observer
 from watchdog.events import FileSystemEventHandler
